@@ -1,3 +1,4 @@
+import java.util.PriorityQueue;
 
 /**
  * Although this class has a history of several years,
@@ -41,7 +42,8 @@ public class HuffProcessor {
 	 *            Buffered bit stream writing to the output file.
 	 */
 	public void compress(BitInputStream in, BitOutputStream out){
-		int[] counts = readForCounts(in);
+		int[] counts = readForCounts(in); 
+		
 		HuffNode root = makeTreeFromCounts(counts);
 		String[] codings = makeCodingsFromTree(root);
 		
@@ -60,27 +62,133 @@ public class HuffProcessor {
 	}
 	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
 		// TODO Auto-generated method stub
-		
+		for (String chunk: codings) {
+			out.writeBits(chunk.length(), Integer.parseInt(chunk, 2));
+		}
 	}
 
+	/**
+	 * Creates tree header (bit sequence representing the tree) from tree
+	 * using a pre-order traversal (which requires recursion)
+	 * @return the root of the tree
+	 * @param root
+	 * @param out
+	 */
 	private void writeHead(HuffNode root, BitOutputStream out) {
-		// TODO Auto-generated method stub
+		if (root == null) {
+			return;
+		}
+		
+		if ((root.myLeft == null) && (root.myRight == null)) {
+			out.writeBits(1, 1);
+			out.writeBits(BITS_PER_WORD + 1, root.myValue);
+		}
+		
+		writeHead(root.myLeft, out);
+		writeHead(root.myRight, out);
+		
+//		int bit = in.readBits(1);
+//		if (bit == -1) {
+//			throw new HuffException("readBits method returns -1.");
+//		}
+//		if (bit == 0) {
+//			HuffNode left = readTreeHeader(in);
+//			HuffNode right = readTreeHeader(in);
+//			return new HuffNode(0, 0, left, right);
+//		} else {
+//			int value = in.readBits(BITS_PER_WORD + 1);
+//			return new HuffNode(value, 0, null, null);
+//		}
 		
 	}
-
+	
+	/**
+	 * Returns an array of Strings such that a[val]
+	 * is the encoding of the 8-bit chunk val
+	 * @param root
+	 * @return array of encodings of 8-bit chunks
+	 */
 	private String[] makeCodingsFromTree(HuffNode root) {
-		// TODO Auto-generated method stub
+		String[] encodings = new String[ALPH_SIZE + 1];
+		codingHelper(root, "", encodings);
 		return null;
 	}
+	
+	/**
+	 * Recursive helper method for makeCodingsFromTree
+	 * @param root
+	 * @param path
+	 * @param encodings
+	 */
+	private void codingHelper(HuffNode root, String path, String[] encodings) {
+		if (root == null) {
+			return;
+		}
+		
+		if ((root.myLeft == null) && (root.myRight == null)) {
+			encodings[root.myValue] = path;
+			return;
+		}
+		
+//		if (root.myLeft != null) {
+//			codingHelper(root.myLeft)
+//		}
+		
+		codingHelper(root.myLeft, path + "0", encodings);
+		codingHelper(root.myRight, path + "1", encodings);		
+	}
 
+	/**
+	 * Create a trie using a greedy algorithm
+	 * and a priority queue of HuffNode objects
+	 * @param counts
+	 * @return root node of trie
+	 */
+	
 	private HuffNode makeTreeFromCounts(int[] counts) {
-		// TODO Auto-generated method stub
-		return null;
+		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
+		
+		for (int i = 0; i < counts.length; i ++) {
+			if (counts[i] > 0) {
+				pq.add(new HuffNode(i, counts[i], null, null));
+			}
+		}
+		
+		while (pq.size() > 1) {
+			HuffNode left = pq.remove();
+			HuffNode right = pq.remove();
+			int parentWeight = left.myWeight + right.myWeight;
+			HuffNode t = new HuffNode(0, parentWeight, left, right);
+			pq.add(t);
+		}
+		
+		HuffNode root = pq.remove();
+		
+		return root;
 	}
 
+	/**
+	 * Determine frequency of every eight-bit character/chunk
+	 * in the file being compressed.
+	 * @param in
+	 * @return
+	 */
 	private int[] readForCounts(BitInputStream in) {
-		// TODO Auto-generated method stub
-		return null;
+
+		int[] freq = new int[ALPH_SIZE + 1];
+		
+		freq[PSEUDO_EOF] = 1;
+				
+		while (true) {
+			int charValue = in.readBits(BITS_PER_WORD);
+			if (charValue == -1) {
+				break;
+			} else {
+				freq[charValue] = freq[charValue] + 1;
+			}
+		}
+		
+		return freq;
 	}
 
 	/**
@@ -101,17 +209,15 @@ public class HuffProcessor {
 		HuffNode root = readTreeHeader(in);
 		readCompressedBits(root, in, out);
 		out.close();
-		
-		
-		
-//		while (true){
-//			int val = in.readBits(BITS_PER_WORD);
-//			if (val == -1) break;
-//			out.writeBits(BITS_PER_WORD, val);
-//		}
-//		out.close();
 	}
 
+	/**
+	 * Reads the bits from the BitInputStream representing the compressed file
+	 * one bit at a time 
+	 * @param root
+	 * @param in
+	 * @param out
+	 */
 	private void readCompressedBits(HuffNode root, BitInputStream in, BitOutputStream out) {
 		// TODO Auto-generated method stub
 		HuffNode current = root;
@@ -138,9 +244,15 @@ public class HuffProcessor {
 		}
 		
 	}
+	
+	/**
+	 * Creates the tree from the tree header (bit sequence representing the tree)
+	 * using a pre-order traversal (which requires recursion)
+	 * @param in the tree header
+	 * @return the root of the tree
+	 */
 
 	private HuffNode readTreeHeader(BitInputStream in) {
-		// TODO Auto-generated method stub
 		int bit = in.readBits(1);
 		if (bit == -1) {
 			throw new HuffException("readBits method returns -1.");
