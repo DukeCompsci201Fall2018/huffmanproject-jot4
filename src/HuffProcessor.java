@@ -53,13 +53,15 @@ public class HuffProcessor {
 		in.reset();
 		writeCompressedBits(codings, in, out);
 		out.close();
-//		while (true){
-//			int val = in.readBits(BITS_PER_WORD);
-//			if (val == -1) break;
-//			out.writeBits(BITS_PER_WORD, val);
-//		}
-//		out.close();
 	}
+	
+	/**
+	 * Read the file being compressed one more time
+	 * and encodes every 8-bit chunk (every character)
+	 * @param codings
+	 * @param in
+	 * @param out
+	 */
 	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
 		while (true) {
 			int charValue = in.readBits(BITS_PER_WORD);
@@ -95,20 +97,6 @@ public class HuffProcessor {
 		
 		writeHead(root.myLeft, out);
 		writeHead(root.myRight, out);
-		
-//		int bit = in.readBits(1);
-//		if (bit == -1) {
-//			throw new HuffException("readBits method returns -1.");
-//		}
-//		if (bit == 0) {
-//			HuffNode left = readTreeHeader(in);
-//			HuffNode right = readTreeHeader(in);
-//			return new HuffNode(0, 0, left, right);
-//		} else {
-//			int value = in.readBits(BITS_PER_WORD + 1);
-//			return new HuffNode(value, 0, null, null);
-//		}
-		
 	}
 	
 	/**
