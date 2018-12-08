@@ -61,7 +61,6 @@ public class HuffProcessor {
 //		out.close();
 	}
 	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
-		// TODO Auto-generated method stub
 		for (String chunk: codings) {
 			out.writeBits(chunk.length(), Integer.parseInt(chunk, 2));
 		}
@@ -111,7 +110,7 @@ public class HuffProcessor {
 	private String[] makeCodingsFromTree(HuffNode root) {
 		String[] encodings = new String[ALPH_SIZE + 1];
 		codingHelper(root, "", encodings);
-		return null;
+		return encodings;
 	}
 	
 	/**
