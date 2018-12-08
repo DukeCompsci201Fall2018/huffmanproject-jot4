@@ -41,14 +41,48 @@ public class HuffProcessor {
 	 *            Buffered bit stream writing to the output file.
 	 */
 	public void compress(BitInputStream in, BitOutputStream out){
-
-		while (true){
-			int val = in.readBits(BITS_PER_WORD);
-			if (val == -1) break;
-			out.writeBits(BITS_PER_WORD, val);
-		}
+		int[] counts = readForCounts(in);
+		HuffNode root = makeTreeFromCounts(counts);
+		String[] codings = makeCodingsFromTree(root);
+		
+		out.writeBits(BITS_PER_INT, HUFF_TREE);
+		writeHead(root, out);
+		
+		in.reset();
+		writeCompressedBits(codings, in, out);
 		out.close();
+//		while (true){
+//			int val = in.readBits(BITS_PER_WORD);
+//			if (val == -1) break;
+//			out.writeBits(BITS_PER_WORD, val);
+//		}
+//		out.close();
 	}
+	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void writeHead(HuffNode root, BitOutputStream out) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private String[] makeCodingsFromTree(HuffNode root) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private HuffNode makeTreeFromCounts(int[] counts) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private int[] readForCounts(BitInputStream in) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * Decompresses a file. Output file must be identical bit-by-bit to the
 	 * original.
@@ -97,6 +131,7 @@ public class HuffProcessor {
 						break;
 					} else {
 						out.writeBits(BITS_PER_WORD, current.myValue);
+						current = root;
 					}
 			}
 			}
